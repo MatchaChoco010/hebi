@@ -1,0 +1,7 @@
+[package]
+name = "hebi"
+
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]

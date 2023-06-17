@@ -1,0 +1,18 @@
+[workspace]
+members = [
+  "hebi",
+  "hebi-hydra",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+anyhow = "1.0.71"
+env_logger = "0.10.0"
+log = "0.4.17"
+parking_lot = "0.12.1"
+tokio = { version = "1.28.1", features = ["full"] }
+vek = { version = "0.15.10", features = ["bytemuck", "mint"] }
+wgpu = "0.16.0"

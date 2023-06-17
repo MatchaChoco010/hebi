@@ -1,0 +1,9 @@
+[submodule "USD"]
+	path = USD
+	url = https://github.com/PixarAnimationStudios/USD.git
+[submodule "boost"]
+	path = boost
+	url = https://github.com/boostorg/boost.git
+[submodule "oneTBB"]
+	path = oneTBB
+	url = https://github.com/oneapi-src/oneTBB.git
