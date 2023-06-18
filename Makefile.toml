@@ -1,0 +1,37 @@
+[env]
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+CARGO_MAKE_WORKSPACE_SKIP_MEMBERS = ["hebi"]
+PLUGIN_DIR = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/hdHebi"
+
+
+[tasks.clear-plugin-dir]
+cwd = "../"
+script_runner = "@duckscript"
+script = """
+rmdir ${PLUGIN_DIR}
+"""
+
+[tasks.build-plugin]
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.make-plugin-dir]
+dependencies = ["clear-plugin-dir"]
+script_runner = "@duckscript"
+script = """
+mkdir ${PLUGIN_DIR}
+mkdir ${PLUGIN_DIR}/resources
+"""
+
+[tasks.copy-plugin-files]
+dependencies = ["make-plugin-dir", "build-plugin"]
+script_runner = "@duckscript"
+script = """
+glob_cp ${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/release/*.dll ${PLUGIN_DIR}
+glob_cp ${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/release/*.so ${PLUGIN_DIR}
+glob_cp resources/* ${PLUGIN_DIR}/resources/
+"""
+
+[tasks.default]
+clear = true
+dependencies = ["copy-plugin-files"]

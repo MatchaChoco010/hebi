@@ -6,7 +6,15 @@ use std::process::Command;
 fn main() {
     let mut vcvars = vcvars::Vcvars::new();
     let vcvars_include = vcvars.get_cached("INCLUDE").unwrap();
-    env::set_var("INCLUDE", &*vcvars_include);
+
+    let mut vcvars = vcvars::Vcvars::new();
+    let vcvars_lib = vcvars.get_cached("LIB").unwrap();
+
+    let mut vcvars = vcvars::Vcvars::new();
+    let vcvars_libpath = vcvars.get_cached("LIBPATH").unwrap();
+
+    let mut vcvars = vcvars::Vcvars::new();
+    let vcvars_path = vcvars.get_cached("PATH").unwrap();
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
@@ -14,6 +22,7 @@ fn main() {
 
     let boost_dst = cmake::Config::new("../boost")
         .out_dir(format!("{}/build/boost", out_dir))
+        .always_configure(false)
         .profile("Release")
         .cxxflag("/EHsc")
         .build();
@@ -23,6 +32,10 @@ fn main() {
     fs::create_dir_all(tbb_dst).unwrap();
     Command::new("make")
         .current_dir(tbb_dir.clone())
+        .env("INCLUDE", &*vcvars_include)
+        .env("LIB", &*vcvars_lib)
+        .env("LIBPATH", &*vcvars_libpath)
+        .env("PATH", &*vcvars_path)
         .args([
             &format!("tbb_root={}", tbb_dir.to_str().unwrap()),
             "-C",
@@ -37,6 +50,7 @@ fn main() {
 
     let usd_dst = cmake::Config::new("../USD")
         .profile("Release")
+        .always_configure(false)
         .out_dir(PathBuf::from(out_dir).join("build/usd"))
         .define("PXR_BUILD_EXAMPLES", "false")
         .define("PXR_BUILD_TESTS", "false")
@@ -62,5 +76,20 @@ fn main() {
         .compile("hebi-hydra-cpp");
 
     println!("cargo:rustc-link-search=native={}", tbb_dst);
-    println!("cargo:rerun-if-changed=cpp/*");
+    println!(
+        "cargo:rustc-link-search=native={}",
+        usd_dst.join("lib").to_str().unwrap()
+    );
+
+    for f in fs::read_dir(usd_dst.join("lib")).unwrap() {
+        let f = f.unwrap();
+        let f = f.file_name();
+        let f = f.to_str().unwrap();
+        if f.ends_with(".lib") {
+            let f = f.trim_end_matches(".lib");
+            println!("cargo:rustc-link-lib=dylib={}", f);
+        }
+    }
+
+    println!("cargo:rerun-if-changed=cpp");
 }
