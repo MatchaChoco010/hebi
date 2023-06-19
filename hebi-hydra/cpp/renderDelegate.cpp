@@ -1,101 +1,91 @@
-//
-// Copyright 2020 Pixar
-//
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
-//
 #include "renderDelegate.h"
 #include "mesh.h"
 #include "renderPass.h"
 
 #include <iostream>
 
-PXR_NAMESPACE_OPEN_SCOPE
+using namespace pxr;
 
-const TfTokenVector HdTinyRenderDelegate::SUPPORTED_RPRIM_TYPES =
-    {
-        HdPrimTypeTokens->mesh,
-};
+TfTokenVector SUPPORTED_RPRIM_TYPES = {};
+TfTokenVector SUPPORTED_SPRIM_TYPES = {};
+TfTokenVector SUPPORTED_BPRIM_TYPES = {};
 
-const TfTokenVector HdTinyRenderDelegate::SUPPORTED_SPRIM_TYPES =
-    {};
-
-const TfTokenVector HdTinyRenderDelegate::SUPPORTED_BPRIM_TYPES =
-    {};
-
-HdTinyRenderDelegate::HdTinyRenderDelegate()
-    : HdRenderDelegate()
+HdHebiRenderDelegate::HdHebiRenderDelegate()
+    : HdRenderDelegate(),
+      _bridgeRenderDelegate(new_bridge_render_delegate())
 {
     _Initialize();
 }
 
-HdTinyRenderDelegate::HdTinyRenderDelegate(
+HdHebiRenderDelegate::HdHebiRenderDelegate(
     HdRenderSettingsMap const &settingsMap)
-    : HdRenderDelegate(settingsMap)
+    : HdRenderDelegate(settingsMap),
+      _bridgeRenderDelegate(new_bridge_render_delegate())
 {
     _Initialize();
 }
 
-void HdTinyRenderDelegate::_Initialize()
+void HdHebiRenderDelegate::_Initialize()
 {
-    std::cout << "Creating Tiny RenderDelegate" << std::endl;
+    _bridgeRenderDelegate.init();
     _resourceRegistry = std::make_shared<HdResourceRegistry>();
 }
 
-HdTinyRenderDelegate::~HdTinyRenderDelegate()
+HdHebiRenderDelegate::~HdHebiRenderDelegate()
 {
     _resourceRegistry.reset();
-    std::cout << "Destroying Tiny RenderDelegate" << std::endl;
+    _bridgeRenderDelegate.destroy();
 }
 
 TfTokenVector const &
-HdTinyRenderDelegate::GetSupportedRprimTypes() const
+HdHebiRenderDelegate::GetSupportedRprimTypes() const
 {
+    SUPPORTED_RPRIM_TYPES.clear();
+    auto tokens = _bridgeRenderDelegate.get_supported_rprim_types();
+    for (auto token : tokens)
+    {
+        SUPPORTED_RPRIM_TYPES.emplace_back(TfToken(std::string(token)));
+    }
     return SUPPORTED_RPRIM_TYPES;
 }
 
 TfTokenVector const &
-HdTinyRenderDelegate::GetSupportedSprimTypes() const
+HdHebiRenderDelegate::GetSupportedSprimTypes() const
 {
+    SUPPORTED_SPRIM_TYPES.clear();
+    auto tokens = _bridgeRenderDelegate.get_supported_sprim_types();
+    for (auto token : tokens)
+    {
+        SUPPORTED_SPRIM_TYPES.emplace_back(TfToken(std::string(token)));
+    }
     return SUPPORTED_SPRIM_TYPES;
 }
 
 TfTokenVector const &
-HdTinyRenderDelegate::GetSupportedBprimTypes() const
+HdHebiRenderDelegate::GetSupportedBprimTypes() const
 {
+    SUPPORTED_BPRIM_TYPES.clear();
+    auto tokens = _bridgeRenderDelegate.get_supported_bprim_types();
+    for (auto token : tokens)
+    {
+        SUPPORTED_BPRIM_TYPES.emplace_back(TfToken(std::string(token)));
+    }
     return SUPPORTED_BPRIM_TYPES;
 }
 
 HdResourceRegistrySharedPtr
-HdTinyRenderDelegate::GetResourceRegistry() const
+HdHebiRenderDelegate::GetResourceRegistry() const
 {
     return _resourceRegistry;
 }
 
-void HdTinyRenderDelegate::CommitResources(HdChangeTracker *tracker)
+void HdHebiRenderDelegate::CommitResources(HdChangeTracker *tracker)
 {
     std::cout << "=> CommitResources RenderDelegate" << std::endl;
 }
 
 HdRenderPassSharedPtr
-HdTinyRenderDelegate::CreateRenderPass(
+HdHebiRenderDelegate::CreateRenderPass(
     HdRenderIndex *index,
     HdRprimCollection const &collection)
 {
@@ -106,7 +96,7 @@ HdTinyRenderDelegate::CreateRenderPass(
 }
 
 HdRprim *
-HdTinyRenderDelegate::CreateRprim(TfToken const &typeId,
+HdHebiRenderDelegate::CreateRprim(TfToken const &typeId,
                                   SdfPath const &rprimId)
 {
     std::cout << "Create Tiny Rprim type=" << typeId.GetText()
@@ -126,14 +116,14 @@ HdTinyRenderDelegate::CreateRprim(TfToken const &typeId,
     return nullptr;
 }
 
-void HdTinyRenderDelegate::DestroyRprim(HdRprim *rPrim)
+void HdHebiRenderDelegate::DestroyRprim(HdRprim *rPrim)
 {
     std::cout << "Destroy Tiny Rprim id=" << rPrim->GetId() << std::endl;
     delete rPrim;
 }
 
 HdSprim *
-HdTinyRenderDelegate::CreateSprim(TfToken const &typeId,
+HdHebiRenderDelegate::CreateSprim(TfToken const &typeId,
                                   SdfPath const &sprimId)
 {
     TF_CODING_ERROR("Unknown Sprim type=%s id=%s",
@@ -143,20 +133,20 @@ HdTinyRenderDelegate::CreateSprim(TfToken const &typeId,
 }
 
 HdSprim *
-HdTinyRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
+HdHebiRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
 {
     TF_CODING_ERROR("Creating unknown fallback sprim type=%s",
                     typeId.GetText());
     return nullptr;
 }
 
-void HdTinyRenderDelegate::DestroySprim(HdSprim *sPrim)
+void HdHebiRenderDelegate::DestroySprim(HdSprim *sPrim)
 {
     TF_CODING_ERROR("Destroy Sprim not supported");
 }
 
 HdBprim *
-HdTinyRenderDelegate::CreateBprim(TfToken const &typeId, SdfPath const &bprimId)
+HdHebiRenderDelegate::CreateBprim(TfToken const &typeId, SdfPath const &bprimId)
 {
     TF_CODING_ERROR("Unknown Bprim type=%s id=%s",
                     typeId.GetText(),
@@ -165,20 +155,20 @@ HdTinyRenderDelegate::CreateBprim(TfToken const &typeId, SdfPath const &bprimId)
 }
 
 HdBprim *
-HdTinyRenderDelegate::CreateFallbackBprim(TfToken const &typeId)
+HdHebiRenderDelegate::CreateFallbackBprim(TfToken const &typeId)
 {
     TF_CODING_ERROR("Creating unknown fallback bprim type=%s",
                     typeId.GetText());
     return nullptr;
 }
 
-void HdTinyRenderDelegate::DestroyBprim(HdBprim *bPrim)
+void HdHebiRenderDelegate::DestroyBprim(HdBprim *bPrim)
 {
     TF_CODING_ERROR("Destroy Bprim not supported");
 }
 
 HdInstancer *
-HdTinyRenderDelegate::CreateInstancer(
+HdHebiRenderDelegate::CreateInstancer(
     HdSceneDelegate *delegate,
     SdfPath const &id)
 {
@@ -187,15 +177,13 @@ HdTinyRenderDelegate::CreateInstancer(
     return nullptr;
 }
 
-void HdTinyRenderDelegate::DestroyInstancer(HdInstancer *instancer)
+void HdHebiRenderDelegate::DestroyInstancer(HdInstancer *instancer)
 {
     TF_CODING_ERROR("Destroy instancer not supported");
 }
 
 HdRenderParam *
-HdTinyRenderDelegate::GetRenderParam() const
+HdHebiRenderDelegate::GetRenderParam() const
 {
     return nullptr;
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

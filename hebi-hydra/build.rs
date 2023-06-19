@@ -59,7 +59,7 @@ fn main() {
         .cxxflag("/EHsc")
         .build();
 
-    cxx_build::bridge("src/lib.rs")
+    cxx_build::bridge("src/bridge.rs")
         .cpp(true)
         .debug(false)
         .define("NOMINMAX", None)

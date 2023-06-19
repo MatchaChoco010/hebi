@@ -1,7 +1,8 @@
 #pragma once
-#include "mesh.h"
-#include "renderDelegate.h"
+#include "pxr/imaging/hd/rendererPluginRegistry.h"
+
+#include "hebi-hydra/src/bridge.rs.h"
+
 #include "rendererPlugin.h"
-#include "renderPass.h"
 
 void entry();
