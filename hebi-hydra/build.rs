@@ -51,7 +51,7 @@ fn main() {
     let usd_dst = cmake::Config::new("../USD")
         .profile("Release")
         .always_configure(false)
-        .out_dir(PathBuf::from(out_dir).join("build/usd"))
+        .out_dir(PathBuf::from(&out_dir).join("build/usd"))
         .define("PXR_BUILD_EXAMPLES", "false")
         .define("PXR_BUILD_TESTS", "false")
         .define("PXR_BUILD_TUTORIALS", "false")
@@ -68,19 +68,18 @@ fn main() {
         .include(boost_dst.join("include/boost-1_82"))
         .include("../oneTBB/include")
         .include(usd_dst.join("include"))
-        .file("cpp/entry.cpp")
         .file("cpp/mesh.cpp")
         .file("cpp/renderDelegate.cpp")
         .file("cpp/rendererPlugin.cpp")
         .file("cpp/renderPass.cpp")
         .compile("hebi-hydra-cpp");
 
+    println!("cargo:rustc-link-arg={}/cpp/*.o", out_dir);
     println!("cargo:rustc-link-search=native={}", tbb_dst);
     println!(
         "cargo:rustc-link-search=native={}",
         usd_dst.join("lib").to_str().unwrap()
     );
-
     for f in fs::read_dir(usd_dst.join("lib")).unwrap() {
         let f = f.unwrap();
         let f = f.file_name();
@@ -90,6 +89,5 @@ fn main() {
             println!("cargo:rustc-link-lib=dylib={}", f);
         }
     }
-
     println!("cargo:rerun-if-changed=cpp");
 }

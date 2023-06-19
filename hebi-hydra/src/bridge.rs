@@ -2,14 +2,7 @@ use std::sync::OnceLock;
 
 #[cxx::bridge]
 pub mod ffi {
-    unsafe extern "C++" {
-        include!("hebi-hydra/cpp/entry.h");
-
-        fn entry();
-    }
     extern "Rust" {
-        fn initialize();
-
         type BridgeRenderDelegate;
         fn new_bridge_render_delegate() -> &'static BridgeRenderDelegate;
         fn get_supported_rprim_types(self: &BridgeRenderDelegate) -> Vec<String>;
@@ -22,21 +15,11 @@ pub mod ffi {
 
 static RENDER_DELEGATE: OnceLock<BridgeRenderDelegate> = OnceLock::new();
 
-pub fn register(render_delegate: Box<dyn RenderDelegate + Sync + Send>) {
-    let bridge = BridgeRenderDelegate::new(render_delegate);
-    RENDER_DELEGATE.set(bridge).ok().unwrap();
-}
-
-fn initialize() {
-    crate::register();
-    ffi::entry();
-}
-
 struct BridgeRenderDelegate {
-    item: Box<dyn RenderDelegate + Sync + Send>,
+    item: Box<dyn RenderDelegate>,
 }
 impl BridgeRenderDelegate {
-    fn new(render_delegate: Box<dyn RenderDelegate + Sync + Send>) -> Self {
+    fn new(render_delegate: Box<dyn RenderDelegate>) -> Self {
         Self {
             item: render_delegate,
         }
@@ -64,10 +47,14 @@ impl BridgeRenderDelegate {
 }
 
 fn new_bridge_render_delegate() -> &'static BridgeRenderDelegate {
-    RENDER_DELEGATE.get().unwrap()
+    // ffi::dummy();
+    RENDER_DELEGATE.get_or_init(|| {
+        let render_delegate = crate::register();
+        BridgeRenderDelegate::new(render_delegate)
+    })
 }
 
-pub trait RenderDelegate {
+pub trait RenderDelegate: Send + Sync + 'static {
     fn get_supported_rprim_types(&self) -> Vec<String>;
     fn get_supported_sprim_types(&self) -> Vec<String>;
     fn get_supported_bprim_types(&self) -> Vec<String>;

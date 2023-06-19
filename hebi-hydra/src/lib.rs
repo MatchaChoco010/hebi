@@ -1,7 +1,7 @@
 mod bridge;
 
-pub fn register() {
-    bridge::register(HebiRenderDelegate::new());
+pub fn register() -> Box<dyn bridge::RenderDelegate> {
+    HebiRenderDelegate::new()
 }
 
 struct HebiRenderDelegate {}

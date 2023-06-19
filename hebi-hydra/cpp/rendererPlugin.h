@@ -6,6 +6,7 @@
 #include "pxr/imaging/hd/rendererPluginRegistry.h"
 
 using namespace pxr;
+
 extern "C" class HdHebiRendererPlugin final : public HdRendererPlugin
 {
 public:

@@ -3,6 +3,11 @@
 
 using namespace pxr;
 
+TF_REGISTRY_FUNCTION(TfType)
+{
+    HdRendererPluginRegistry::Define<HdHebiRendererPlugin>();
+}
+
 HdRenderDelegate *
 HdHebiRendererPlugin::CreateRenderDelegate()
 {
