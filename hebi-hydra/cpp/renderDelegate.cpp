@@ -148,6 +148,13 @@ void HdHebiRenderDelegate::DestroySprim(HdSprim *sPrim)
 HdBprim *
 HdHebiRenderDelegate::CreateBprim(TfToken const &typeId, SdfPath const &bprimId)
 {
+    if (typeId == HdPrimTypeTokens->renderBuffer)
+    {
+        auto id = bprimId.MakeRelativePath(SdfPath::AbsoluteRootPath()).GetText();
+        auto boxRustRB = _bridgeRenderDelegate.create_render_buffer(rust::String(id));
+        auto data = boxRustRB->read();
+    }
+
     TF_CODING_ERROR("Unknown Bprim type=%s id=%s",
                     typeId.GetText(),
                     bprimId.GetText());
