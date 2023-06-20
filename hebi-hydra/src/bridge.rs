@@ -1,5 +1,3 @@
-use std::sync::OnceLock;
-
 #[cxx::bridge]
 pub mod ffi {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -14,7 +12,7 @@ pub mod ffi {
     }
 
     extern "Rust" {
-        fn new_bridge_render_delegate() -> &'static BridgeRenderDelegate;
+        fn new_bridge_render_delegate() -> Box<BridgeRenderDelegate>;
 
         type BridgeRenderDelegate;
         fn get_supported_rprim_types(self: &BridgeRenderDelegate) -> Vec<String>;
@@ -37,23 +35,23 @@ pub mod ffi {
     }
 }
 
-static RENDER_DELEGATE: OnceLock<BridgeRenderDelegate> = OnceLock::new();
-
-fn new_bridge_render_delegate() -> &'static BridgeRenderDelegate {
-    RENDER_DELEGATE.get_or_init(|| {
-        let render_delegate = crate::register();
-        BridgeRenderDelegate {
-            item: Box::new(RenderBufferBoxedRenderDelegate {
-                item: render_delegate,
-            }),
-        }
-    })
+fn new_bridge_render_delegate() -> Box<BridgeRenderDelegate> {
+    let render_delegate = crate::create_render_delegate();
+    BridgeRenderDelegate::new(render_delegate)
 }
 
 struct BridgeRenderDelegate {
     item: Box<dyn RenderDelegate<RenderBuffer = Box<dyn RenderBuffer>>>,
 }
 impl BridgeRenderDelegate {
+    fn new(render_delegate: impl RenderDelegate + 'static) -> Box<Self> {
+        Box::new(BridgeRenderDelegate {
+            item: Box::new(RenderBufferBoxedRenderDelegate {
+                item: render_delegate,
+            }),
+        })
+    }
+
     fn get_supported_rprim_types(&self) -> Vec<String> {
         self.item.get_supported_rprim_types()
     }

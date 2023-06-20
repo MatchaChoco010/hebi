@@ -27,21 +27,21 @@ HdHebiRenderDelegate::HdHebiRenderDelegate(
 
 void HdHebiRenderDelegate::_Initialize()
 {
-    _bridgeRenderDelegate.init();
+    _bridgeRenderDelegate->init();
     _resourceRegistry = std::make_shared<HdResourceRegistry>();
 }
 
 HdHebiRenderDelegate::~HdHebiRenderDelegate()
 {
     _resourceRegistry.reset();
-    _bridgeRenderDelegate.destroy();
+    _bridgeRenderDelegate->destroy();
 }
 
 TfTokenVector const &
 HdHebiRenderDelegate::GetSupportedRprimTypes() const
 {
     SUPPORTED_RPRIM_TYPES.clear();
-    auto tokens = _bridgeRenderDelegate.get_supported_rprim_types();
+    auto tokens = _bridgeRenderDelegate->get_supported_rprim_types();
     for (auto token : tokens)
     {
         SUPPORTED_RPRIM_TYPES.emplace_back(TfToken(std::string(token)));
@@ -53,7 +53,7 @@ TfTokenVector const &
 HdHebiRenderDelegate::GetSupportedSprimTypes() const
 {
     SUPPORTED_SPRIM_TYPES.clear();
-    auto tokens = _bridgeRenderDelegate.get_supported_sprim_types();
+    auto tokens = _bridgeRenderDelegate->get_supported_sprim_types();
     for (auto token : tokens)
     {
         SUPPORTED_SPRIM_TYPES.emplace_back(TfToken(std::string(token)));
@@ -65,7 +65,7 @@ TfTokenVector const &
 HdHebiRenderDelegate::GetSupportedBprimTypes() const
 {
     SUPPORTED_BPRIM_TYPES.clear();
-    auto tokens = _bridgeRenderDelegate.get_supported_bprim_types();
+    auto tokens = _bridgeRenderDelegate->get_supported_bprim_types();
     for (auto token : tokens)
     {
         SUPPORTED_BPRIM_TYPES.emplace_back(TfToken(std::string(token)));
@@ -151,7 +151,7 @@ HdHebiRenderDelegate::CreateBprim(TfToken const &typeId, SdfPath const &bprimId)
     if (typeId == HdPrimTypeTokens->renderBuffer)
     {
         auto id = bprimId.MakeRelativePath(SdfPath::AbsoluteRootPath()).GetText();
-        auto boxRustRB = _bridgeRenderDelegate.create_render_buffer(rust::String(id));
+        auto boxRustRB = _bridgeRenderDelegate->create_render_buffer(rust::String(id));
         auto data = boxRustRB->read();
     }
 

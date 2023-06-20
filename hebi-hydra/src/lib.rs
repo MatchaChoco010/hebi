@@ -1,6 +1,6 @@
 mod bridge;
 
-pub fn register() -> impl bridge::RenderDelegate {
+pub fn create_render_delegate() -> impl bridge::RenderDelegate + 'static {
     HebiRenderDelegate::new()
 }
 

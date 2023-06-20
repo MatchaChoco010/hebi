@@ -59,7 +59,7 @@ private:
     void _Initialize();
 
     HdResourceRegistrySharedPtr _resourceRegistry;
-    const BridgeRenderDelegate &_bridgeRenderDelegate;
+    rust::Box<BridgeRenderDelegate> _bridgeRenderDelegate;
 
     // This class does not support copying.
     HdHebiRenderDelegate(const HdHebiRenderDelegate &) = delete;
