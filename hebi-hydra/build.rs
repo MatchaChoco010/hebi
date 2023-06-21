@@ -25,6 +25,7 @@ fn main() {
         .always_configure(false)
         .profile("Release")
         .cxxflag("/EHsc")
+        .cxxflag("/source-charset:utf-8")
         .build();
 
     let tbb_dst = PathBuf::from(out_dir.clone()).join("build/tbb");
@@ -57,6 +58,7 @@ fn main() {
         .define("PXR_BUILD_TUTORIALS", "false")
         .define("PXR_ENABLE_PYTHON_SUPPORT", "false")
         .cxxflag("/EHsc")
+        .cxxflag("/source-charset:utf-8")
         .build();
 
     cxx_build::bridge("src/bridge.rs")
@@ -64,11 +66,13 @@ fn main() {
         .debug(false)
         .define("NOMINMAX", None)
         .flag_if_supported("-std=c++17")
+        .flag_if_supported("/source-charset:utf-8")
         .includes(env::split_paths(&*vcvars_include))
         .include(boost_dst.join("include/boost-1_82"))
         .include("../oneTBB/include")
         .include(usd_dst.join("include"))
         .file("cpp/mesh.cpp")
+        .file("cpp/renderBuffer.cpp")
         .file("cpp/renderDelegate.cpp")
         .file("cpp/rendererPlugin.cpp")
         .file("cpp/renderPass.cpp")

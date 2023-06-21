@@ -6,6 +6,10 @@
 #include "pxr/imaging/hd/resourceRegistry.h"
 #include "pxr/base/tf/staticTokens.h"
 
+#include "mesh.h"
+#include "renderBuffer.h"
+#include "renderPass.h"
+
 #include "hebi-hydra/src/bridge.rs.h"
 
 using namespace pxr;
@@ -13,22 +17,16 @@ using namespace pxr;
 class HdHebiRenderDelegate final : public HdRenderDelegate
 {
 public:
-    /// Render delegate constructor.
     HdHebiRenderDelegate();
-    /// Render delegate constructor.
     HdHebiRenderDelegate(HdRenderSettingsMap const &settingsMap);
-    /// Render delegate destructor.
     virtual ~HdHebiRenderDelegate();
 
-    /// Supported types
     const TfTokenVector &GetSupportedRprimTypes() const override;
     const TfTokenVector &GetSupportedSprimTypes() const override;
     const TfTokenVector &GetSupportedBprimTypes() const override;
 
-    // Basic value to return from the RD
     HdResourceRegistrySharedPtr GetResourceRegistry() const override;
 
-    // Prims
     HdRenderPassSharedPtr CreateRenderPass(
         HdRenderIndex *index,
         HdRprimCollection const &collection) override;
@@ -54,6 +52,10 @@ public:
     void CommitResources(HdChangeTracker *tracker) override;
 
     HdRenderParam *GetRenderParam() const override;
+
+    HdAovDescriptor GetDefaultAovDescriptor(TfToken const &name) const override;
+
+    void Render();
 
 private:
     void _Initialize();

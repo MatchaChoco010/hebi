@@ -1,13 +1,29 @@
+use parking_lot::Mutex;
+use std::collections::HashMap;
+use std::sync::Arc;
+
 mod bridge;
+use bridge::RenderBuffer;
 
 pub fn create_render_delegate() -> impl bridge::RenderDelegate + 'static {
     HebiRenderDelegate::new()
 }
 
-pub struct HebiRenderDelegate {}
+#[derive(Debug)]
+struct HebiRenderDelegateInner {
+    buffers: HashMap<bridge::RenderBufferId, HebiRenderBuffer>,
+}
+#[derive(Debug)]
+pub struct HebiRenderDelegate {
+    inner: Arc<Mutex<HebiRenderDelegateInner>>,
+}
 impl HebiRenderDelegate {
     fn new() -> Self {
-        Self {}
+        Self {
+            inner: Arc::new(Mutex::new(HebiRenderDelegateInner {
+                buffers: HashMap::new(),
+            })),
+        }
     }
 }
 impl bridge::RenderDelegate for HebiRenderDelegate {
@@ -21,7 +37,7 @@ impl bridge::RenderDelegate for HebiRenderDelegate {
     }
 
     fn get_supported_bprim_types(&self) -> Vec<String> {
-        vec![]
+        vec!["renderBuffer".to_string()]
     }
 
     fn init(&self) {
@@ -32,43 +48,100 @@ impl bridge::RenderDelegate for HebiRenderDelegate {
         println!("HebiRenderDelegate destroy");
     }
 
+    fn render(&self) {
+        println!("HebiRenderDelegate render");
+
+        for (_id, buffer) in self.inner.lock().buffers.iter_mut() {
+            let width = buffer.get_width();
+            let height = buffer.get_height();
+            let format = buffer.get_format();
+
+            // 雑にRGBの色を緑で塗りつぶす
+            if format == bridge::RenderBufferFormat::UNorm8Vec4 {
+                let mut data = vec![0; width * height * format.component_size()];
+                for i in 0..height {
+                    for j in 0..width {
+                        let index = (i * width + j) * format.component_size();
+                        data[index + 0] = 0;
+                        data[index + 1] = 255;
+                        data[index + 2] = 0;
+                        data[index + 3] = 255;
+                    }
+                }
+                buffer.write(&data);
+            }
+        }
+    }
+
     fn create_render_buffer(&self, id: bridge::RenderBufferId) -> HebiRenderBuffer {
-        HebiRenderBuffer::new()
+        let render_buffer = HebiRenderBuffer::new();
+        let mut inner = self.inner.lock();
+        inner.buffers.insert(id, render_buffer.clone());
+        render_buffer
     }
 }
 
-pub struct HebiRenderBuffer {}
+#[derive(Debug)]
+struct HebiRenderBufferInner {
+    buffer: Vec<u8>,
+    width: usize,
+    height: usize,
+    format: bridge::RenderBufferFormat,
+}
+#[derive(Debug, Clone)]
+pub struct HebiRenderBuffer {
+    inner: Arc<Mutex<HebiRenderBufferInner>>,
+}
 impl HebiRenderBuffer {
     fn new() -> Self {
-        Self {}
+        Self {
+            inner: Arc::new(Mutex::new(HebiRenderBufferInner {
+                buffer: Vec::new(),
+                width: 0,
+                height: 0,
+                format: bridge::RenderBufferFormat::Invalid,
+            })),
+        }
     }
 }
 impl bridge::RenderBuffer for HebiRenderBuffer {
     fn allocate(&self, width: usize, height: usize, format: bridge::RenderBufferFormat) {
-        todo!()
+        let buffer_size = width * height * format.component_size();
+        let mut inner = self.inner.lock();
+        inner.buffer = vec![0; buffer_size];
+        // todo 以前のバッファを保持する
+
+        inner.width = width;
+        inner.height = height;
+        inner.format = format;
     }
 
     fn get_width(&self) -> usize {
-        todo!()
+        let inner = self.inner.lock();
+        inner.width
     }
 
     fn get_height(&self) -> usize {
-        todo!()
+        let inner = self.inner.lock();
+        inner.height
     }
 
     fn get_format(&self) -> bridge::RenderBufferFormat {
-        todo!()
+        let inner = self.inner.lock();
+        inner.format
     }
 
     fn read(&self) -> Vec<u8> {
-        todo!()
+        let inner = self.inner.lock();
+        inner.buffer.clone()
     }
 
     fn write(&self, data: &[u8]) {
-        todo!()
+        let mut inner = self.inner.lock();
+        inner.buffer.clone_from_slice(data);
     }
 
     fn finalize(&self) {
-        todo!()
+        println!("finalize render buffer");
     }
 }

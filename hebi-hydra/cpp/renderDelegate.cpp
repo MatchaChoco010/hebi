@@ -1,6 +1,4 @@
 #include "renderDelegate.h"
-#include "mesh.h"
-#include "renderPass.h"
 
 #include <iostream>
 
@@ -92,7 +90,7 @@ HdHebiRenderDelegate::CreateRenderPass(
     std::cout << "Create RenderPass with Collection="
               << collection.GetName() << std::endl;
 
-    return HdRenderPassSharedPtr(new HdTinyRenderPass(index, collection));
+    return HdRenderPassSharedPtr(new HdHebiRenderPass(index, collection));
 }
 
 HdRprim *
@@ -151,8 +149,8 @@ HdHebiRenderDelegate::CreateBprim(TfToken const &typeId, SdfPath const &bprimId)
     if (typeId == HdPrimTypeTokens->renderBuffer)
     {
         auto id = bprimId.MakeRelativePath(SdfPath::AbsoluteRootPath()).GetText();
-        auto boxRustRB = _bridgeRenderDelegate->create_render_buffer(rust::String(id));
-        auto data = boxRustRB->read();
+        auto renderBuffer = _bridgeRenderDelegate->create_render_buffer(rust::String(id));
+        return new HdHebiRenderBuffer(bprimId, std::move(renderBuffer));
     }
 
     TF_CODING_ERROR("Unknown Bprim type=%s id=%s",
@@ -164,6 +162,13 @@ HdHebiRenderDelegate::CreateBprim(TfToken const &typeId, SdfPath const &bprimId)
 HdBprim *
 HdHebiRenderDelegate::CreateFallbackBprim(TfToken const &typeId)
 {
+    if (typeId == HdPrimTypeTokens->renderBuffer)
+    {
+        auto id = SdfPath::EmptyPath().GetText();
+        auto renderBuffer = _bridgeRenderDelegate->create_render_buffer(rust::String(id));
+        return new HdHebiRenderBuffer(SdfPath::EmptyPath(), std::move(renderBuffer));
+    }
+
     TF_CODING_ERROR("Creating unknown fallback bprim type=%s",
                     typeId.GetText());
     return nullptr;
@@ -171,7 +176,7 @@ HdHebiRenderDelegate::CreateFallbackBprim(TfToken const &typeId)
 
 void HdHebiRenderDelegate::DestroyBprim(HdBprim *bPrim)
 {
-    TF_CODING_ERROR("Destroy Bprim not supported");
+    delete bPrim;
 }
 
 HdInstancer *
@@ -193,4 +198,45 @@ HdRenderParam *
 HdHebiRenderDelegate::GetRenderParam() const
 {
     return nullptr;
+}
+
+HdAovDescriptor HdHebiRenderDelegate::GetDefaultAovDescriptor(TfToken const &name) const
+{
+    if (name == HdAovTokens->color)
+    {
+        return HdAovDescriptor(HdFormatUNorm8Vec4, true, VtValue(GfVec4f(0.0f)));
+    }
+    else if (name == HdAovTokens->normal || name == HdAovTokens->Neye)
+    {
+        return HdAovDescriptor(HdFormatFloat32Vec3, false, VtValue(GfVec3f(-1.0f)));
+    }
+    else if (name == HdAovTokens->depth)
+    {
+        return HdAovDescriptor(HdFormatFloat32, false, VtValue(1.0f));
+    }
+    // else if (name == HdAovTokens->cameraDepth)
+    // {
+    //     return HdAovDescriptor(HdFormatFloat32, false, VtValue(0.0f));
+    // }
+    // else if (name == HdAovTokens->primId ||
+    //          name == HdAovTokens->instanceId ||
+    //          name == HdAovTokens->elementId)
+    // {
+    //     return HdAovDescriptor(HdFormatInt32, false, VtValue(-1));
+    // }
+    // else
+    // {
+    //     HdParsedAovToken aovId(name);
+    //     if (aovId.isPrimvar)
+    //     {
+    //         return HdAovDescriptor(HdFormatFloat32Vec3, false, VtValue(GfVec3f(0.0f)));
+    //     }
+    // }
+
+    return HdAovDescriptor();
+}
+
+void HdHebiRenderDelegate::Render()
+{
+    _bridgeRenderDelegate->render();
 }

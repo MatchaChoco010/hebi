@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 cxx = "1.0.97"
+parking_lot = { workspace = true }
 
 [build-dependencies]
 cmake = "0.1.50"
