@@ -13,7 +13,7 @@
                 }
             },
             "LibraryPath": "./hebi_hydra.dll",
-            "Name": "HdHebi",
+            "Name": "hdHebi",
             "ResourcePath": "resources",
             "Root": "../",
             "Type": "library"

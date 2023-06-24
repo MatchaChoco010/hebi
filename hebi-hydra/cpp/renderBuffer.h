@@ -2,6 +2,7 @@
 #define HD_HEBI_RENDER_BUFFER_H
 
 #include "pxr/pxr.h"
+#include "pxr/base/tf/diagnostic.h"
 #include "pxr/base/gf/vec3i.h"
 #include "pxr/imaging/hd/renderBuffer.h"
 

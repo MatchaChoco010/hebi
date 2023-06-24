@@ -19,7 +19,6 @@ void HdHebiRenderPass::_Execute(
     HdRenderPassStateSharedPtr const &renderPassState,
     TfTokenVector const &renderTags)
 {
-    std::cout << "=> Execute RenderPass" << std::endl;
     HdHebiRenderDelegate *renderDelegate = dynamic_cast<HdHebiRenderDelegate *>(GetRenderIndex()->GetRenderDelegate());
     renderDelegate->Render();
 }

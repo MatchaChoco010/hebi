@@ -14,6 +14,7 @@ rmdir ${PLUGIN_DIR}
 [tasks.build-plugin]
 command = "cargo"
 args = ["build", "--release"]
+env = { PXR_LIB_PREFIX = "libpxr_" }
 
 [tasks.make-plugin-dir]
 dependencies = ["clear-plugin-dir"]

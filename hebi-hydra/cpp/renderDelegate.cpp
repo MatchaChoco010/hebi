@@ -105,12 +105,11 @@ HdHebiRenderDelegate::CreateRprim(TfToken const &typeId,
     {
         return new HdTinyMesh(rprimId);
     }
-    else
-    {
-        TF_CODING_ERROR("Unknown Rprim type=%s id=%s",
-                        typeId.GetText(),
-                        rprimId.GetText());
-    }
+
+    TF_CODING_ERROR("Unknown Rprim type=%s id=%s",
+                    typeId.GetText(),
+                    rprimId.GetText());
+
     return nullptr;
 }
 
@@ -124,6 +123,15 @@ HdSprim *
 HdHebiRenderDelegate::CreateSprim(TfToken const &typeId,
                                   SdfPath const &sprimId)
 {
+    if (typeId == HdPrimTypeTokens->camera)
+    {
+        return new HdCamera(sprimId);
+    }
+    else if (typeId == HdPrimTypeTokens->extComputation)
+    {
+        return new HdExtComputation(sprimId);
+    }
+
     TF_CODING_ERROR("Unknown Sprim type=%s id=%s",
                     typeId.GetText(),
                     sprimId.GetText());
@@ -133,6 +141,15 @@ HdHebiRenderDelegate::CreateSprim(TfToken const &typeId,
 HdSprim *
 HdHebiRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
 {
+    if (typeId == HdPrimTypeTokens->camera)
+    {
+        return new HdCamera(SdfPath::EmptyPath());
+    }
+    else if (typeId == HdPrimTypeTokens->extComputation)
+    {
+        return new HdExtComputation(SdfPath::EmptyPath());
+    }
+
     TF_CODING_ERROR("Creating unknown fallback sprim type=%s",
                     typeId.GetText());
     return nullptr;
@@ -140,7 +157,7 @@ HdHebiRenderDelegate::CreateFallbackSprim(TfToken const &typeId)
 
 void HdHebiRenderDelegate::DestroySprim(HdSprim *sPrim)
 {
-    TF_CODING_ERROR("Destroy Sprim not supported");
+    delete sPrim;
 }
 
 HdBprim *
@@ -148,7 +165,7 @@ HdHebiRenderDelegate::CreateBprim(TfToken const &typeId, SdfPath const &bprimId)
 {
     if (typeId == HdPrimTypeTokens->renderBuffer)
     {
-        auto id = bprimId.MakeRelativePath(SdfPath::AbsoluteRootPath()).GetText();
+        auto id = bprimId.MakeRelativePath(SdfPath::AbsoluteRootPath()).GetString();
         auto renderBuffer = _bridgeRenderDelegate->create_render_buffer(rust::String(id));
         return new HdHebiRenderBuffer(bprimId, std::move(renderBuffer));
     }
@@ -164,7 +181,7 @@ HdHebiRenderDelegate::CreateFallbackBprim(TfToken const &typeId)
 {
     if (typeId == HdPrimTypeTokens->renderBuffer)
     {
-        auto id = SdfPath::EmptyPath().GetText();
+        auto id = SdfPath::EmptyPath().GetString();
         auto renderBuffer = _bridgeRenderDelegate->create_render_buffer(rust::String(id));
         return new HdHebiRenderBuffer(SdfPath::EmptyPath(), std::move(renderBuffer));
     }
@@ -206,10 +223,10 @@ HdAovDescriptor HdHebiRenderDelegate::GetDefaultAovDescriptor(TfToken const &nam
     {
         return HdAovDescriptor(HdFormatUNorm8Vec4, true, VtValue(GfVec4f(0.0f)));
     }
-    else if (name == HdAovTokens->normal || name == HdAovTokens->Neye)
-    {
-        return HdAovDescriptor(HdFormatFloat32Vec3, false, VtValue(GfVec3f(-1.0f)));
-    }
+    // else if (name == HdAovTokens->normal || name == HdAovTokens->Neye)
+    // {
+    //     return HdAovDescriptor(HdFormatFloat32Vec3, false, VtValue(GfVec3f(-1.0f)));
+    // }
     else if (name == HdAovTokens->depth)
     {
         return HdAovDescriptor(HdFormatFloat32, false, VtValue(1.0f));

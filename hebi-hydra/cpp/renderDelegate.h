@@ -2,9 +2,12 @@
 #define HD_HEBI_RENDER_DELEGATE_H
 
 #include "pxr/pxr.h"
+#include "pxr/base/tf/diagnostic.h"
+#include "pxr/base/tf/staticTokens.h"
+#include "pxr/imaging/hd/camera.h"
+#include "pxr/imaging/hd/extComputation.h"
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/imaging/hd/resourceRegistry.h"
-#include "pxr/base/tf/staticTokens.h"
 
 #include "mesh.h"
 #include "renderBuffer.h"

@@ -106,8 +106,6 @@ void HdHebiRenderBuffer::Finalize(HdRenderParam *renderParam)
 
 void HdHebiRenderBuffer::_Deallocate()
 {
-  TF_VERIFY(!IsMapped());
-
   _width = 0;
   _height = 0;
   _format = HdFormatInvalid;
@@ -148,15 +146,15 @@ bool HdHebiRenderBuffer::Allocate(GfVec3i const &dimensions,
 
 void *HdHebiRenderBuffer::Map()
 {
-  if (_mappers.load() == 0)
+  if (_mappers.fetch_add(1) == 0)
   {
+    _mappers++;
     auto data = _bridgeRenderBuffer->read();
     for (int i = 0; i < data.size(); i++)
     {
       _buffer[i] = data[i];
     }
   }
-  _mappers++;
   return _buffer.data();
 }
 

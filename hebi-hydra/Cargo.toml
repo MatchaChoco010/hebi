@@ -17,6 +17,3 @@ parking_lot = { workspace = true }
 cmake = "0.1.50"
 cxx-build = "1.0.97"
 vcvars = "0.1.6"
-
-[profile.release]
-lto = true

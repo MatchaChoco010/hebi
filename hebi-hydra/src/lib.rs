@@ -33,7 +33,7 @@ impl bridge::RenderDelegate for HebiRenderDelegate {
     }
 
     fn get_supported_sprim_types(&self) -> Vec<String> {
-        vec![]
+        vec!["camera".to_string()]
     }
 
     fn get_supported_bprim_types(&self) -> Vec<String> {
@@ -74,6 +74,7 @@ impl bridge::RenderDelegate for HebiRenderDelegate {
     }
 
     fn create_render_buffer(&self, id: bridge::RenderBufferId) -> HebiRenderBuffer {
+        println!("Create render buffer! {id:?}");
         let render_buffer = HebiRenderBuffer::new();
         let mut inner = self.inner.lock();
         inner.buffers.insert(id, render_buffer.clone());
@@ -106,6 +107,7 @@ impl HebiRenderBuffer {
 }
 impl bridge::RenderBuffer for HebiRenderBuffer {
     fn allocate(&self, width: usize, height: usize, format: bridge::RenderBufferFormat) {
+        println!("allocate {} {}", width, height);
         let buffer_size = width * height * format.component_size();
         let mut inner = self.inner.lock();
         inner.buffer = vec![0; buffer_size];

@@ -13,7 +13,7 @@ class HdHebiRenderPass final : public HdRenderPass
 public:
     HdHebiRenderPass(HdRenderIndex *index,
                      HdRprimCollection const &collection);
-    virtual ~HdHebiRenderPass();
+    ~HdHebiRenderPass() override;
 
 protected:
     void _Execute(
