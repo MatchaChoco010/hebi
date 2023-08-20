@@ -2,6 +2,8 @@
 
 tiny hydra renderer written in Rust.
 
+It is a renderer that simply fills the screen with green.
+
 ## Dependencies
 
 - MSVC 2019 or later
