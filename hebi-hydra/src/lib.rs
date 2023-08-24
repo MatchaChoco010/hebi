@@ -1,149 +1,52 @@
-use parking_lot::Mutex;
-use std::collections::HashMap;
-use std::sync::Arc;
-
 mod bridge;
-use bridge::RenderBuffer;
+mod hebi_hydra;
 
-pub fn create_render_delegate() -> impl bridge::RenderDelegate + 'static {
-    HebiRenderDelegate::new()
+use crate::bridge::*;
+
+pub trait RenderDelegate: Send + Sync {
+    type RenderBuffer: RenderBuffer;
+    fn get_supported_rprim_types(&self) -> Vec<String>;
+    fn get_supported_sprim_types(&self) -> Vec<String>;
+    fn get_supported_bprim_types(&self) -> Vec<String>;
+    fn init(&self);
+    fn destroy(&self);
+    fn render(&self);
+    fn create_render_buffer(&self, id: RenderBufferId) -> Self::RenderBuffer;
 }
 
-#[derive(Debug)]
-struct HebiRenderDelegateInner {
-    buffers: HashMap<bridge::RenderBufferId, HebiRenderBuffer>,
+pub trait RenderBuffer: Send + Sync {
+    fn allocate(&self, width: usize, height: usize, format: RenderBufferFormat);
+    fn get_width(&self) -> usize;
+    fn get_height(&self) -> usize;
+    fn get_format(&self) -> RenderBufferFormat;
+    fn read(&self) -> Vec<u8>;
+    fn write(&self, data: &[u8]);
+    fn finalize(&self);
 }
-#[derive(Debug)]
-pub struct HebiRenderDelegate {
-    inner: Arc<Mutex<HebiRenderDelegateInner>>,
-}
-impl HebiRenderDelegate {
-    fn new() -> Self {
-        Self {
-            inner: Arc::new(Mutex::new(HebiRenderDelegateInner {
-                buffers: HashMap::new(),
-            })),
-        }
+impl RenderBuffer for Box<dyn RenderBuffer + 'static> {
+    fn allocate(&self, width: usize, height: usize, format: RenderBufferFormat) {
+        self.as_ref().allocate(width, height, format)
     }
-}
-impl bridge::RenderDelegate for HebiRenderDelegate {
-    type RenderBuffer = HebiRenderBuffer;
-    fn get_supported_rprim_types(&self) -> Vec<String> {
-        vec!["mesh".to_string()]
-    }
-
-    fn get_supported_sprim_types(&self) -> Vec<String> {
-        vec!["camera".to_string()]
-    }
-
-    fn get_supported_bprim_types(&self) -> Vec<String> {
-        vec!["renderBuffer".to_string()]
-    }
-
-    fn init(&self) {
-        println!("HebiRenderDelegate init");
-    }
-
-    fn destroy(&self) {
-        println!("HebiRenderDelegate destroy");
-    }
-
-    fn render(&self) {
-        println!("HebiRenderDelegate render");
-
-        for (_id, buffer) in self.inner.lock().buffers.iter_mut() {
-            let width = buffer.get_width();
-            let height = buffer.get_height();
-            let format = buffer.get_format();
-
-            // 雑にRGBの色を緑で塗りつぶす
-            if format == bridge::RenderBufferFormat::UNorm8Vec4 {
-                let mut data = vec![0; width * height * format.component_size()];
-                for i in 0..height {
-                    for j in 0..width {
-                        let index = (i * width + j) * format.component_size();
-                        data[index + 0] = 0;
-                        data[index + 1] = 255;
-                        data[index + 2] = 0;
-                        data[index + 3] = 255;
-                    }
-                }
-                buffer.write(&data);
-            }
-        }
-    }
-
-    fn create_render_buffer(&self, id: bridge::RenderBufferId) -> HebiRenderBuffer {
-        println!("Create render buffer! {id:?}");
-        let render_buffer = HebiRenderBuffer::new();
-        let mut inner = self.inner.lock();
-        inner.buffers.insert(id, render_buffer.clone());
-        render_buffer
-    }
-}
-
-#[derive(Debug)]
-struct HebiRenderBufferInner {
-    buffer: Vec<u8>,
-    width: usize,
-    height: usize,
-    format: bridge::RenderBufferFormat,
-}
-#[derive(Debug, Clone)]
-pub struct HebiRenderBuffer {
-    inner: Arc<Mutex<HebiRenderBufferInner>>,
-}
-impl HebiRenderBuffer {
-    fn new() -> Self {
-        Self {
-            inner: Arc::new(Mutex::new(HebiRenderBufferInner {
-                buffer: Vec::new(),
-                width: 0,
-                height: 0,
-                format: bridge::RenderBufferFormat::Invalid,
-            })),
-        }
-    }
-}
-impl bridge::RenderBuffer for HebiRenderBuffer {
-    fn allocate(&self, width: usize, height: usize, format: bridge::RenderBufferFormat) {
-        println!("allocate {} {}", width, height);
-        let buffer_size = width * height * format.component_size();
-        let mut inner = self.inner.lock();
-        inner.buffer = vec![0; buffer_size];
-        // todo 以前のバッファを保持する
-
-        inner.width = width;
-        inner.height = height;
-        inner.format = format;
-    }
-
     fn get_width(&self) -> usize {
-        let inner = self.inner.lock();
-        inner.width
+        self.as_ref().get_width()
     }
-
     fn get_height(&self) -> usize {
-        let inner = self.inner.lock();
-        inner.height
+        self.as_ref().get_height()
     }
-
-    fn get_format(&self) -> bridge::RenderBufferFormat {
-        let inner = self.inner.lock();
-        inner.format
+    fn get_format(&self) -> RenderBufferFormat {
+        self.as_ref().get_format()
     }
-
     fn read(&self) -> Vec<u8> {
-        let inner = self.inner.lock();
-        inner.buffer.clone()
+        self.as_ref().read()
     }
-
     fn write(&self, data: &[u8]) {
-        let mut inner = self.inner.lock();
-        inner.buffer.clone_from_slice(data);
+        self.as_ref().write(data)
     }
-
     fn finalize(&self) {
-        println!("finalize render buffer");
+        self.as_ref().finalize()
     }
+}
+
+pub fn create_render_delegate() -> impl RenderDelegate + 'static {
+    hebi_hydra::HebiRenderDelegate::new()
 }
