@@ -1,6 +1,6 @@
 //! This Module implements Hydra's RenderDelegate to hebi.
 
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -90,12 +90,12 @@ struct HebiRenderBufferInner {
 }
 #[derive(Debug, Clone)]
 pub struct HebiRenderBuffer {
-    inner: Arc<Mutex<HebiRenderBufferInner>>,
+    inner: Arc<RwLock<HebiRenderBufferInner>>,
 }
 impl HebiRenderBuffer {
     fn new() -> Self {
         Self {
-            inner: Arc::new(Mutex::new(HebiRenderBufferInner {
+            inner: Arc::new(RwLock::new(HebiRenderBufferInner {
                 buffer: Vec::new(),
                 width: 0,
                 height: 0,
@@ -108,7 +108,7 @@ impl RenderBuffer for HebiRenderBuffer {
     fn allocate(&self, width: usize, height: usize, format: RenderBufferFormat) {
         println!("allocate {} {}", width, height);
         let buffer_size = width * height * format.component_size();
-        let mut inner = self.inner.lock();
+        let mut inner = self.inner.write();
         inner.buffer = vec![0; buffer_size];
         // todo 以前のバッファを保持する
 
@@ -118,27 +118,27 @@ impl RenderBuffer for HebiRenderBuffer {
     }
 
     fn get_width(&self) -> usize {
-        let inner = self.inner.lock();
+        let inner = self.inner.read();
         inner.width
     }
 
     fn get_height(&self) -> usize {
-        let inner = self.inner.lock();
+        let inner = self.inner.read();
         inner.height
     }
 
     fn get_format(&self) -> RenderBufferFormat {
-        let inner = self.inner.lock();
+        let inner = self.inner.read();
         inner.format
     }
 
     fn read(&self) -> Vec<u8> {
-        let inner = self.inner.lock();
+        let inner = self.inner.read();
         inner.buffer.clone()
     }
 
     fn write(&self, data: &[u8]) {
-        let mut inner = self.inner.lock();
+        let mut inner = self.inner.write();
         inner.buffer.clone_from_slice(data);
     }
 

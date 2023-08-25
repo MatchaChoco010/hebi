@@ -146,19 +146,18 @@ bool HdHebiRenderBuffer::Allocate(GfVec3i const &dimensions,
 
 void *HdHebiRenderBuffer::Map()
 {
-  if (_mappers.fetch_add(1) == 0)
+  _mappers.fetch_add(1);
+
+  auto data = _bridgeRenderBuffer->read();
+  for (int i = 0; i < data.size(); i++)
   {
-    _mappers++;
-    auto data = _bridgeRenderBuffer->read();
-    for (int i = 0; i < data.size(); i++)
-    {
-      _buffer[i] = data[i];
-    }
+    _buffer[i] = data[i];
   }
+
   return _buffer.data();
 }
 
 void HdHebiRenderBuffer::Unmap()
 {
-  _mappers--;
+  _mappers.fetch_sub(1);
 }
