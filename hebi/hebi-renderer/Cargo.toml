@@ -1,0 +1,9 @@
+[package]
+name = "hebi-renderer"
+
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+vek = { version = "0.15.10", features = ["bytemuck", "mint"] }
+wgpu = "0.16.0"

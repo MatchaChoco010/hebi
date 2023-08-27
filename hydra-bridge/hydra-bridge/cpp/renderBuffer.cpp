@@ -1,6 +1,6 @@
 #include "renderBuffer.h"
 
-#include "hebi-hydra/src/bridge.rs.h"
+#include "hydra-bridge/src/bridge.rs.h"
 
 using namespace pxr;
 

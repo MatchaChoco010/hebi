@@ -4,16 +4,9 @@ name = "hebi-hydra"
 version = { workspace = true }
 edition = { workspace = true }
 
-build = "build.rs"
-
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-cxx = "1.0.97"
+hydra-bridge = { path = "../../hydra-bridge/hydra-bridge" }
 parking_lot = { workspace = true }
-
-[build-dependencies]
-cmake = "0.1.50"
-cxx-build = "1.0.97"
-vcvars = "0.1.6"

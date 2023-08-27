@@ -1,4 +1,4 @@
-# hebi
+# hebi-hydra-renderer
 
 tiny hydra renderer written in Rust.
 ## Dependencies

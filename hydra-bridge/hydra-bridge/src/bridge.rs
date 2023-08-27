@@ -1,5 +1,7 @@
 //! Module for interactions between C++ and Rust using CXX.
 
+use std::sync::OnceLock;
+
 mod type_conversion;
 pub use type_conversion::*;
 
@@ -73,8 +75,10 @@ pub mod ffi {
 }
 
 fn new_bridge_render_delegate() -> Box<BridgeRenderDelegate> {
-    let render_delegate = crate::create_render_delegate();
-    BridgeRenderDelegate::new(render_delegate)
+    let render_delegate_creator = crate::CREATE_RENDER_DELEGATE_FN
+        .get()
+        .expect("should be set up create_create_render_delegate");
+    (render_delegate_creator.f)()
 }
 
 struct BridgeRenderDelegate {
@@ -135,6 +139,25 @@ impl BridgeRenderBuffer {
     }
     fn finalize(&self) {
         self.item.finalize()
+    }
+}
+
+// Structure that converts generation methods of types implementing RenderDelegate to
+// generation methods of BridgeRenderDelegate.
+pub static CREATE_RENDER_DELEGATE_FN: OnceLock<BridgeRenderDelegateCreator> = OnceLock::new();
+pub struct BridgeRenderDelegateCreator {
+    f: Box<dyn Fn() -> Box<BridgeRenderDelegate> + Send + Sync>,
+}
+impl BridgeRenderDelegateCreator {
+    pub fn new<
+        RB: crate::RenderBuffer + 'static,
+        R: crate::RenderDelegate<RenderBuffer = RB> + 'static,
+    >(
+        f: fn() -> R,
+    ) -> Self {
+        Self {
+            f: Box::new(move || BridgeRenderDelegate::new(f())),
+        }
     }
 }
 

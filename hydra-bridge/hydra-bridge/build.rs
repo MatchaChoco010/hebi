@@ -26,9 +26,9 @@ fn main() {
         .unwrap()
         .join("OpenUSD");
     let usd_dir = usd_dir.to_str().unwrap();
+    let usd_dst = PathBuf::from(&out_dir).join("OpenUSD");
 
     let pxr_lib_prefix = env::var("PXR_LIB_PREFIX").unwrap_or("usd".to_string());
-    let usd_dst = PathBuf::from(&out_dir).join("build").join(&pxr_lib_prefix);
 
     let output = Command::new("cmd")
         .env("INCLUDE", &*vcvars_include)
@@ -68,21 +68,21 @@ fn main() {
         .file("cpp/renderDelegate.cpp")
         .file("cpp/rendererPlugin.cpp")
         .file("cpp/renderPass.cpp")
+        .link_lib_modifier("-bundle")
+        .link_lib_modifier("+whole-archive")
         .compile("hebi-hydra-cpp");
 
-    println!("cargo:rustc-link-arg={}/cpp/*.o", out_dir);
-    println!(
-        "cargo:rustc-link-search=native={}",
-        usd_dst.join("lib").to_str().unwrap()
-    );
+    println!("cargo:rerun-if-changed=rs");
+    println!("cargo:rerun-if-changed=cpp");
+
+    println!("cargo:rustc-link-search={}", usd_dst.join("lib").display());
     for f in fs::read_dir(usd_dst.join("lib")).unwrap() {
         let f = f.unwrap();
         let f = f.file_name();
         let f = f.to_str().unwrap();
         if f.ends_with(".lib") {
             let f = f.trim_end_matches(".lib");
-            println!("cargo:rustc-link-lib=dylib={}", f);
+            println!("cargo:rustc-link-lib={}", f);
         }
     }
-    println!("cargo:rerun-if-changed=cpp");
 }

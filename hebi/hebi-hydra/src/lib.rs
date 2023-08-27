@@ -1,11 +1,20 @@
 //! This Module implements Hydra's RenderDelegate to hebi.
 
+use hydra_bridge;
+use hydra_bridge::bridge::*;
+use hydra_bridge::{RenderBuffer, RenderDelegate};
 use parking_lot::{Mutex, RwLock};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::bridge::*;
-use crate::{RenderBuffer, RenderDelegate};
+#[hydra_bridge::ctor]
+fn init() {
+    hydra_bridge::register_render_delegate_creator(create_render_delegate);
+}
+
+fn create_render_delegate() -> HebiRenderDelegate {
+    HebiRenderDelegate::new()
+}
 
 #[derive(Debug)]
 struct HebiRenderDelegateInner {
@@ -72,7 +81,7 @@ impl RenderDelegate for HebiRenderDelegate {
         }
     }
 
-    fn create_render_buffer(&self, id: RenderBufferId) -> HebiRenderBuffer {
+    fn create_render_buffer(&self, id: RenderBufferId) -> Self::RenderBuffer {
         println!("Create render buffer! {id:?}");
         let render_buffer = HebiRenderBuffer::new();
         let mut inner = self.inner.lock();

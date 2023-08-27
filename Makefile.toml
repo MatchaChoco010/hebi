@@ -1,17 +1,15 @@
-[env]
-CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
-CARGO_MAKE_WORKSPACE_SKIP_MEMBERS = ["hebi"]
-PLUGIN_DIR = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/hdHebi"
-
+[config]
+default_to_workspace = false
+skip_core_tasks = true
 
 [tasks.clear-plugin-dir]
-cwd = "../"
 script_runner = "@duckscript"
 script = """
-rmdir ${PLUGIN_DIR}
+rm -r ${CARGO_MAKE_CURRENT_TASK_INITIAL_MAKEFILE_DIRECTORY}/hdHebi
 """
 
 [tasks.build-plugin]
+cwd = "${CARGO_MAKE_CURRENT_TASK_INITIAL_MAKEFILE_DIRECTORY}/hebi/hebi-hydra"
 command = "cargo"
 args = ["build", "--release"]
 env = { PXR_LIB_PREFIX = "libpxr_" }
@@ -20,6 +18,7 @@ env = { PXR_LIB_PREFIX = "libpxr_" }
 dependencies = ["clear-plugin-dir"]
 script_runner = "@duckscript"
 script = """
+PLUGIN_DIR = set ${CARGO_MAKE_CURRENT_TASK_INITIAL_MAKEFILE_DIRECTORY}/hdHebi
 mkdir ${PLUGIN_DIR}
 mkdir ${PLUGIN_DIR}/resources
 """
@@ -28,11 +27,25 @@ mkdir ${PLUGIN_DIR}/resources
 dependencies = ["make-plugin-dir", "build-plugin"]
 script_runner = "@duckscript"
 script = """
-glob_cp ${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/release/*.dll ${PLUGIN_DIR}
-glob_cp ${CARGO_MAKE_CRATE_TARGET_DIRECTORY}/release/*.so ${PLUGIN_DIR}
-glob_cp resources/* ${PLUGIN_DIR}/resources/
+TARGET_DIR = set ${CARGO_MAKE_CURRENT_TASK_INITIAL_MAKEFILE_DIRECTORY}/hebi/target
+PLUGIN_DIR = set ${CARGO_MAKE_CURRENT_TASK_INITIAL_MAKEFILE_DIRECTORY}/hdHebi
+glob_cp ${TARGET_DIR}/release/*.dll ${PLUGIN_DIR}
+glob_cp ${TARGET_DIR}/release/*.so ${PLUGIN_DIR}
+glob_cp hebi/resources/* ${PLUGIN_DIR}/resources/
 """
 
+[tasks.clean-hydra-bridge]
+cwd = "${CARGO_MAKE_CURRENT_TASK_INITIAL_MAKEFILE_DIRECTORY}/hydra-bridge"
+command = "cargo"
+args = ["clean"]
+
+[tasks.clean-hebi]
+cwd = "${CARGO_MAKE_CURRENT_TASK_INITIAL_MAKEFILE_DIRECTORY}/hebi"
+command = "cargo"
+args = ["clean"]
+
+[tasks.clean]
+dependencies = ["clean-hydra-bridge", "clean-hebi"]
+
 [tasks.default]
-clear = true
 dependencies = ["copy-plugin-files"]

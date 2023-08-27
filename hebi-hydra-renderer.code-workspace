@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "hebi"
+		},
+		{
+			"path": "hydra-bridge"
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"bprim",
+			"hebi",
+			"Instancer",
+			"rprim",
+			"sprim"
+		]
+	}
+}

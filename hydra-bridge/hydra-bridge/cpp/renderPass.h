@@ -4,6 +4,7 @@
 #include "pxr/pxr.h"
 #include "pxr/imaging/hd/renderPass.h"
 
+#include "rust/cxx.h"
 #include "renderDelegate.h"
 
 using namespace pxr;

@@ -1,10 +1,12 @@
-mod bridge;
-mod hebi_hydra;
+extern crate ctor;
+pub use ctor::ctor;
+
+pub mod bridge;
 
 use crate::bridge::*;
 
 pub trait RenderDelegate: Send + Sync {
-    type RenderBuffer: RenderBuffer;
+    type RenderBuffer: RenderBuffer + Sized;
     fn get_supported_rprim_types(&self) -> Vec<String>;
     fn get_supported_sprim_types(&self) -> Vec<String>;
     fn get_supported_bprim_types(&self) -> Vec<String>;
@@ -47,6 +49,11 @@ impl RenderBuffer for Box<dyn RenderBuffer + 'static> {
     }
 }
 
-pub fn create_render_delegate() -> impl RenderDelegate + 'static {
-    hebi_hydra::HebiRenderDelegate::new()
+pub fn register_render_delegate_creator<
+    RB: RenderBuffer + 'static,
+    R: RenderDelegate<RenderBuffer = RB> + 'static,
+>(
+    f: fn() -> R,
+) {
+    let _ = CREATE_RENDER_DELEGATE_FN.set(BridgeRenderDelegateCreator::new(f));
 }

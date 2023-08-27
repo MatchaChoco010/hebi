@@ -5,6 +5,8 @@
 #include "pxr/imaging/hd/rendererPlugin.h"
 #include "pxr/imaging/hd/rendererPluginRegistry.h"
 
+#include "rust/cxx.h"
+
 using namespace pxr;
 
 extern "C" class HdHebiRendererPlugin final : public HdRendererPlugin

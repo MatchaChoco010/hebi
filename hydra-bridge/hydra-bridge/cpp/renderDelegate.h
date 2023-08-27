@@ -9,11 +9,12 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/imaging/hd/resourceRegistry.h"
 
+#include "rust/cxx.h"
+#include "hydra-bridge/src/bridge.rs.h"
+
 #include "mesh.h"
 #include "renderBuffer.h"
 #include "renderPass.h"
-
-#include "hebi-hydra/src/bridge.rs.h"
 
 using namespace pxr;
 

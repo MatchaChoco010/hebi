@@ -1,0 +1,15 @@
+[package]
+name = "hydra-bridge"
+version.workspace = true
+edition.workspace = true
+
+build = "build.rs"
+
+[dependencies]
+ctor = "0.2.4"
+cxx = "1.0.97"
+
+[build-dependencies]
+cmake = "0.1.50"
+cxx-build = "1.0.97"
+vcvars = "0.1.6"

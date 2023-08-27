@@ -27,6 +27,8 @@
 #include "pxr/pxr.h"
 #include "pxr/imaging/hd/mesh.h"
 
+#include "rust/cxx.h"
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 /// \class HdTinyMesh
