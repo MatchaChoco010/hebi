@@ -1,2 +1,3 @@
 [submodule "hydra-bridge/OpenUSD"]
 	path = hydra-bridge/OpenUSD
+	url = https://github.com/PixarAnimationStudios/OpenUSD.git
